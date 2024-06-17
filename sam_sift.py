@@ -8,6 +8,8 @@ from PIL import Image
 from torchvision import transforms as T
 import os
 from segment_anything import sam_model_registry, SamPredictor
+from sklearn.cluster import KMeans
+from sklearn.metrics import davies_bouldin_score
 
 
 class SAM:
@@ -27,7 +29,7 @@ class SAM:
         sam.to(device=self.device)
         predictor = SamPredictor(sam)
         predictor.set_image(image)
-        print('input_points: ', input_points)
+        # print('input_points: ', input_points)
         input_label = np.ones(input_points.shape[0])
 
         masks, _, _ = predictor.predict(
@@ -74,6 +76,43 @@ class SIFT(SAM):
 
         return good_matches
     
+    def optimal_kmeans(data, max_clusters=20):
+        """
+        Apply K-means clustering to determine the optimal number of clusters
+        using the Davies-Bouldin index.
+
+        Parameters:
+        - data: np.array of shape (n_samples, 2), where each row represents a 2D point.
+        - max_clusters: int, maximum number of clusters to try.
+
+        Returns:
+        - centroids: np.array, centroids of the clusters that best represent the points.
+        """
+        # Check if data has the right dimensions
+        if data.ndim != 2 or data.shape[1] != 2:
+            raise ValueError("Data should be a 2D numpy array with two columns for x and y coordinates.")
+        
+        # Dictionary to store the Davies-Bouldin scores for different numbers of clusters
+        db_scores = {}
+        
+        # Apply K-means clustering for each possible number of clusters from 2 to max_clusters
+        for k in range(2, max_clusters + 1):
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            labels = kmeans.fit_predict(data)
+            # Calculate Davies-Bouldin index
+            db_index = davies_bouldin_score(data, labels)
+            db_scores[k] = db_index
+        
+        # Find the number of clusters with the minimum Davies-Bouldin index
+        best_k = min(db_scores, key=db_scores.get)
+        
+        # Recompute K-means with the optimal number of clusters
+        kmeans = KMeans(n_clusters=best_k, random_state=42)
+        kmeans.fit(data)
+        
+        # Return the centroids of the optimal clusters
+        return kmeans.cluster_centers_
+    
     def draw_trajectory(self, image, keypoints1, keypoints2, good_matches, mask):
         # Create an image to draw the trajectories
         trajectory_image = image
@@ -82,13 +121,17 @@ class SIFT(SAM):
         mask_region = self.show_mask(mask)
         trajectory_image = cv2.addWeighted(trajectory_image, 1, mask_region, 0.5, 0)
 
+        # Calculate the centroid of the keypoints
+        centroids = self.optimal_kmeans(keypoints2)
+
         # Draw the movement of keypoints
         for match in good_matches:
             pt1 = tuple(np.round(keypoints1[match.queryIdx].pt).astype("int"))
             pt2 = tuple(np.round(keypoints2[match.trainIdx].pt).astype("int"))
             pt2 = (pt2[0], pt2[1])
-            cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # Red starting point
-            cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # Blue ending point
+            # cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # Red starting point
+            # cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # Blue ending point
+            cv2.circle(trajectory_image, centroids, 5, (255, 0, 0), -1)  # Red centroid
             cv2.line(trajectory_image, pt1, pt2, (0, 255, 0), 2)   # Green line for movement
             self.matches.append(pt2)
 
@@ -111,7 +154,7 @@ class SIFT(SAM):
                 points = self.points_to_use
 
             temp =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            seg, mask = self.sam_segmentation(temp, points)
+            seg, mask = self.sam_segmentation(frame, points)
             keypoints, descriptors = self.sift_features(seg)
 
             if self.previous_frame is not None:

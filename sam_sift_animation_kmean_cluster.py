@@ -9,12 +9,15 @@ from PIL import Image
 from torchvision import transforms as T
 import os
 from segment_anything import sam_model_registry, SamPredictor
+from sklearn.cluster import KMeans
+from sklearn.metrics import davies_bouldin_score
 
 
 class SAM:
     def __init__(self) -> None:
-        self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
-        self.model_type = "vit_h"
+        # self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
+        self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_b_01ec64.pth"
+        self.model_type = "vit_b"
         self.device = "cuda"
 
     def show_mask(self, mask):
@@ -77,11 +80,51 @@ class SIFT(SAM):
 
         return good_matches
     
+    def optimal_kmeans(self, data, max_clusters=10):
+        """
+        Apply K-means clustering to determine the optimal number of clusters
+        using the Davies-Bouldin index.
+
+        Parameters:
+        - data: np.array of shape (n_samples, 2), where each row represents a 2D point.
+        - max_clusters: int, maximum number of clusters to try.
+
+        Returns:
+        - centroids: np.array, centroids of the clusters that best represent the points.
+        """
+        # Ensure max_clusters is an integer
+        max_clusters = int(max_clusters)
+        
+        # Dictionary to store the Davies-Bouldin scores for different numbers of clusters
+        db_scores = {}
+        
+        # Apply K-means clustering for each possible number of clusters from 2 to max_clusters
+        for k in range(2, max_clusters + 1):
+            kmeans = KMeans(n_clusters=k, n_init=10, random_state=42)  # Set n_init explicitly
+            labels = kmeans.fit_predict(data)
+            # Calculate Davies-Bouldin index
+            db_index = davies_bouldin_score(data, labels)
+            db_scores[k] = db_index
+        
+        # Find the number of clusters with the minimum Davies-Bouldin index
+        best_k = min(db_scores, key=db_scores.get)
+        
+        # Recompute K-means with the optimal number of clusters
+        kmeans = KMeans(n_clusters=best_k, n_init=10, random_state=42)  # Set n_init explicitly
+        kmeans.fit(data)
+        
+        # Convert centroids to integer tuples for OpenCV drawing
+        centroids = np.round(kmeans.cluster_centers_).astype(int)
+        
+        # Return the centroids of the optimal clusters
+        return centroids
+    
     def draw_trajectory(self, image, keypoints1, keypoints2, good_matches, mask):
         # Create an image to draw the trajectories
         trajectory_image = image
         self.matches = []
-
+        points_to_cluster = []
+        
         #overlay mask as a transparent layer on top of the image
         mask_region = self.show_mask(mask)
         trajectory_image = cv2.addWeighted(trajectory_image, 1, mask_region, 0.5, 0)
@@ -91,13 +134,22 @@ class SIFT(SAM):
             pt1 = tuple(np.round(keypoints1[match.queryIdx].pt).astype("int"))
             pt2 = tuple(np.round(keypoints2[match.trainIdx].pt).astype("int"))
             pt2 = (pt2[0], pt2[1])
-            cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # Red starting point
-            cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # Blue ending point
+            points_to_cluster.append(pt2)
+            # cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # Red starting point
+            # cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # Blue ending point
             cv2.line(trajectory_image, pt1, pt2, (0, 255, 0), 2)   # Green line for movement
-            self.matches.append(pt2)
 
-        return trajectory_image, self.matches
+        # Calculate the centroid of the keypoints
+        try:
+            centroids = self.optimal_kmeans(points_to_cluster)           
 
+            for (x, y) in centroids:
+                cv2.circle(trajectory_image, (int(x), int(y)), 5, (255, 0, 0), -1)  # Red centroid
+        except:
+            centroids = []
+            print('Error: Cannot calculate the optimal number of clusters.')
+
+        return trajectory_image, centroids
     def update(self, i):
         # Read the current frame
         image_path = self.images[i]
@@ -119,7 +171,7 @@ class SIFT(SAM):
         self.previous_frame = np.zeros_like(frame)
         self.previous_frame.fill(255)
         self.points_to_use = np.array(self.matches) if len(self.matches) != 0 else self.points_to_use
-        print('points_to_use: ', self.points_to_use)
+        # print('points_to_use: ', self.points_to_use)
         self.previous_keypoints = keypoints
         self.previous_descriptors = descriptors
 
