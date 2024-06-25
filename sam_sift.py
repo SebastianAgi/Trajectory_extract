@@ -123,6 +123,7 @@ class SIFT(SAM):
 
         # Calculate the centroid of the keypoints
         centroids = self.optimal_kmeans(keypoints2)
+        print('centroids: ', centroids)
 
         # Draw the movement of keypoints
         for match in good_matches:

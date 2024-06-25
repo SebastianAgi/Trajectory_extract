@@ -7,7 +7,7 @@ import time
 from PIL import Image
 from torchvision import transforms as T
 
-image = cv2.imread('/home/sebastian/code/Trajectory_extraction/hike_frame_by_frame/frame_0056.jpg')
+image = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/hike_frame_by_frame/frame_0090.jpg')
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 from segment_anything import sam_model_registry, SamPredictor
 
@@ -26,8 +26,9 @@ def show_points(coords, labels, ax, marker_size=375):
     ax.scatter(pos_points[:, 0], pos_points[:, 1], color='green', marker='*', s=marker_size, edgecolor='white', linewidth=0.25)
     ax.scatter(neg_points[:, 0], neg_points[:, 1], color='red', marker='*', s=marker_size, edgecolor='white', linewidth=0.25)
 
-sam_checkpoint = "/home/sebastian/code/segment_anything/sam_vit_h_4b8939.pth"
-model_type = "vit_h"
+# sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
+sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_b_01ec64.pth"
+model_type = "vit_b"
 
 device = "cuda"
 
@@ -39,7 +40,7 @@ predictor = SamPredictor(sam)
 predictor.set_image(image)
 
 #create 5 points
-input_points = np.array([[1920/2, 900],[1920/2, 920],[1920/2, 940],[1920/2, 960],[1920/2, 980]])
+input_points = np.array([[1920/2 - 10, 1000],[1920/2 - 20, 1020],[1920/2 - 30, 1050],[1920/2 - 40, 1060],[1920/2, 1030]])
 
 # input_points = np.array([[1920/2, 900],[1920/2, 1000]]) 
 # input_label = np.array([1, 1, 1, 1, 1])
@@ -64,5 +65,6 @@ for i, (mask, score) in enumerate(zip(masks, scores)):
     show_mask(mask, plt.gca())
     show_points(input_points, input_label, plt.gca())
     plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
+    print(f"Mask {i+1}, Score: {score:.3f}")
     plt.axis('off')
     plt.show()

@@ -106,7 +106,7 @@ class SIFT(SAM):
             print(f"Error: Cannot read image {image_path}.")
             return self.im,  # Return current image artist for FuncAnimation
 
-        temp = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        temp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         seg, mask = self.sam_segmentation(temp, self.points_to_use)
         keypoints, descriptors = self.sift_features(seg)
 

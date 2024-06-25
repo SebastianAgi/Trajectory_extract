@@ -15,9 +15,9 @@ from sklearn.metrics import davies_bouldin_score
 
 class SAM:
     def __init__(self) -> None:
-        # self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
-        self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_b_01ec64.pth"
-        self.model_type = "vit_b"
+        self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
+        # self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_b_01ec64.pth"
+        self.model_type = "vit_h"
         self.device = "cuda"
 
     def show_mask(self, mask):
@@ -26,7 +26,7 @@ class SAM:
         mask_region = (mask_region * 255).astype(np.uint8)
         return mask_region
 
-    def sam_segmentation(self, image, input_points) -> np.ndarray:
+    def sam_segmentation(self, image, input_points, previous_mask) -> np.ndarray:
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         predictor = SamPredictor(sam)
@@ -34,14 +34,21 @@ class SAM:
         # print('input_points: ', input_points)
         input_label = np.ones(input_points.shape[0])
 
-        masks, _, _ = predictor.predict(
+        masks, scores, _ = predictor.predict(
             point_coords=input_points,
             point_labels=input_label,
             multimask_output=True,
         )
 
         #return segmentation of the image
-        mask = np.stack([masks[0]]*3, axis=-1)
+        max_score_index = np.argmax(scores)
+        
+        # if np.sum(previous_mask)/3 > 5*masks[max_score_index]:
+
+        # ones_count = np.sum(masks, axis=(1, 2))
+        # min_ones_index = np.argmin(ones_count)
+
+        mask = np.stack([masks[max_score_index]]*3, axis=-1)
         return mask * image, mask
 
 
@@ -56,6 +63,7 @@ class SIFT(SAM):
         self.previous_descriptors = None
         self.points_to_use = None
         self.matches = []
+        self.previous_mask = None
 
         self.fig, self.ax = plt.subplots(figsize=(12, 6))
         self.ax.axis('off')
@@ -159,19 +167,19 @@ class SIFT(SAM):
             return self.im,  # Return current image artist for FuncAnimation
 
         temp = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        seg, mask = self.sam_segmentation(temp, self.points_to_use)
+        seg, mask = self.sam_segmentation(temp, self.points_to_use, self.previous_mask)
         keypoints, descriptors = self.sift_features(seg)
 
         if self.previous_frame is not None:
             good_matches = self.flann_matcher(self.previous_descriptors, descriptors)
             trajectory_image, self.matches = self.draw_trajectory(temp, self.previous_keypoints, keypoints, good_matches, mask)
-
+            self.previous_mask = mask
             self.im.set_data(trajectory_image)  # Update the image displayed
 
         self.previous_frame = np.zeros_like(frame)
         self.previous_frame.fill(255)
         self.points_to_use = np.array(self.matches) if len(self.matches) != 0 else self.points_to_use
-        # print('points_to_use: ', self.points_to_use)
+        print('points_to_use: ', self.points_to_use)
         self.previous_keypoints = keypoints
         self.previous_descriptors = descriptors
 
@@ -179,6 +187,7 @@ class SIFT(SAM):
 
     def track_features_in_video_frames(self, folder_path, init_points):
         self.images = sorted([os.path.join(folder_path, img) for img in os.listdir(folder_path) if img.endswith((".png", ".jpg", ".jpeg"))])
+        # self.images = self.images[::3]
         self.points_to_use = init_points
 
         # Initialize the image artist for FuncAnimation
@@ -193,5 +202,6 @@ class SIFT(SAM):
 if __name__ == "__main__":
     sift = SIFT()
     folder_path = '/home/sebastian/Documents/code/Trajectory_extract/hike_frame_by_frame'
-    init_points = np.array([[1920/2, 900], [1920/2, 920], [1920/2, 940], [1920/2, 960], [1920/2, 980]])
+    # init_points = np.array([[1920/2, 900], [1920/2, 920], [1920/2, 940], [1920/2, 960], [1920/2, 980]])
+    init_points = np.array([[1920/2 - 10, 1000],[1920/2 - 20, 1020],[1920/2 - 30, 1050],[1920/2 - 40, 1060],[1920/2, 1030]])
     sift.track_features_in_video_frames(folder_path, init_points)
