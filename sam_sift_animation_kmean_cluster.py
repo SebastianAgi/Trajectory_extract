@@ -201,7 +201,7 @@ class SIFT(SAM):
 
 if __name__ == "__main__":
     sift = SIFT()
-    folder_path = '/home/sebastian/Documents/code/Trajectory_extract/hike_frame_by_frame'
+    folder_path = '/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame'
     # init_points = np.array([[1920/2, 900], [1920/2, 920], [1920/2, 940], [1920/2, 960], [1920/2, 980]])
     init_points = np.array([[1920/2 - 10, 1000],[1920/2 - 20, 1020],[1920/2 - 30, 1050],[1920/2 - 40, 1060],[1920/2, 1030]])
     sift.track_features_in_video_frames(folder_path, init_points)
