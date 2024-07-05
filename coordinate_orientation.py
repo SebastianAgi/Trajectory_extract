@@ -12,7 +12,7 @@ directions = []
 images = []  # List of images
 
 # Load the coordinates and orientations
-coordinates_path = '/home/sebastian/code/Data_to_overlay_path/output_fastlio2_extracted/path_coordinates.txt'
+coordinates_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2_extracted/path_coordinates.txt'
 with open(coordinates_path, 'r') as file:
     for line in file:
         if line.startswith('#'):
@@ -69,7 +69,7 @@ def overlay_path_on_cv2_image(cv2_image, points, start_index):
     cv2.destroyAllWindows()
 
 #load the images
-image_dir = '/home/sebastian/code/Data_to_overlay_path/chosen_images'
+image_dir = '/home/sebastian/Documents/ANYmal_data/chosen_images'
 image_files = [f for f in os.listdir(image_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
 image_files.sort()
 for i in range(0, len(image_files)):

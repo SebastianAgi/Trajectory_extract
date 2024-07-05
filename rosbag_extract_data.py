@@ -21,13 +21,14 @@ class ExportData:
         # Initialize the list to store the extracted data
         self._rgb_data = []
         self._path_data = []
+        self._odom_data = []
         self.image_count = 0
 
     def create_output_folders(self):
         os.makedirs(self.extraction_folder, exist_ok=True)
         os.makedirs(os.path.join(self.extraction_folder, self.bag_name), exist_ok=True)
         #now make a folder inside the bag_extracted folder to store the images
-        os.makedirs(os.path.join(self.extraction_folder, self.bag_name, 'images'), exist_ok=True)
+        # os.makedirs(os.path.join(self.extraction_folder, self.bag_name, 'images'), exist_ok=True)
 
     def save_rgb_text_data(self, image_folder, rgb_data):
         rgb_file_path = os.path.join(self.extraction_folder, self.bag_name, 'rgb_timestamps.txt')
@@ -52,6 +53,21 @@ class ExportData:
                 qz = path.poses[-1].pose.orientation.z
                 qw = path.poses[-1].pose.orientation.w
                 f.write(f"{path.poses[-1].header.stamp} {x} {y} {z} {qx} {qy} {qz} {qw}\n")
+    
+    def save_Odometry_data(self, odom_data):
+        odom_file_path = os.path.join(self.extraction_folder, self.bag_name, 'odom_data.txt')
+        with open(odom_file_path, 'w') as f:
+            f.write("# Odometry data\n")
+            f.write("# timestamp x y z qx qy qz qw\n")
+            for timestamp, odom, in odom_data:
+                x = odom.pose.pose.position.x
+                y = odom.pose.pose.position.y
+                z = odom.pose.pose.position.z
+                qx = odom.pose.pose.orientation.x
+                qy = odom.pose.pose.orientation.y
+                qz = odom.pose.pose.orientation.z
+                qw = odom.pose.pose.orientation.w
+                f.write(f"{timestamp} {x} {y} {z} {qx} {qy} {qz} {qw}\n")
 
     def extract_bag(self):
         # Initialize data arrays or variables to store data
@@ -82,11 +98,17 @@ class ExportData:
                     # Increment the image count
                     self.image_count += 1
 
-                if topic == '/path' and '/path' in available_topics:
-                    # Get the path message
-                    path = msg
-                    # Append the timestamp and path to the path_data list
-                    self._path_data.append((t.to_sec(), path))
+                # if topic == '/path' and '/path' in available_topics:
+                #     # Get the path message
+                #     path = msg
+                #     # Append the timestamp and path to the path_data list
+                #     self._path_data.append((t.to_sec(), path))
+
+                if topic == '/Odometry' and '/Odometry' in available_topics:
+                    # Get the Odometry message
+                    odom = msg
+                    # Append the timestamp and Odometry to the odom_data list
+                    self._odom_data.append((t.to_sec(), odom))
 
     def save_data(self):
         self.extract_bag()
@@ -94,12 +116,15 @@ class ExportData:
             self.save_rgb_text_data('images', self._rgb_data)
         if self._path_data:
             self.save_coordinate_data(self._path_data)
+        if self._odom_data:
+            print('odom was not empty')
+            self.save_Odometry_data(self._odom_data)
 
 
 if __name__ == "__main__":
     # Choose the output folder location
     output_folder = '/home/sebastian/Documents/ANYmal_data/'
-    bag_path = '/home/sebastian/Documents/ANYmal_data/anymal_real_message_grass02.bag'
+    bag_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2.bag'
     export_data = ExportData(output_folder, bag_path)
     export_data.save_data()
     print('Data extraction complete.')

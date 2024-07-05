@@ -2,25 +2,49 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.spatial.transform as R
 
-# Load the data from the text file, the data comes in the format: timestamp x y z qx qy qz qw
-data = np.loadtxt('/home/sebastian/Documents/ANYmal_data/output_fastlio2_extracted/path_coordinates.txt', comments='#', delimiter=' ', unpack=True)
+# Initialize lists to store coordinates and orientations
+coordinates = []
+orientations = []
+directions = []
+images = []  # List of images
 
-# Extract the x, y, and z coordinates
-x = data[1]
-y = data[2]
-z = data[3]
+# Load the coordinates and orientations
+coordinates_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2_extracted/path_coordinates.txt'
+with open(coordinates_path, 'r') as file:
+    for line in file:
+        if line.startswith('#'):
+            continue  # Skip comment lines
+        parts = line.split()
+        if parts:
+            coordinates.append((float(parts[1]), float(parts[2]), float(parts[3])))
+            orientations.append((float(parts[7]), float(parts[4]), float(parts[5]), float(parts[6])))
 
-# Plot the x, y, and z coordinates on same sized axes
+# Plot coordinate data
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(-x, y, -z, label='Trajectory')
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
 ax.set_zlabel('Z')
-#set z axis to be from -60 to 20
-ax.set_xlim(-20, 60)
-ax.set_ylim(-60, 20)
-ax.set_zlim(-60, 20)
+ax.set_title('Path coordinates')
+ax.set_zlim(-5, 1)
 
+#limit the number of points to plot
+coordinates = coordinates[:100]
+orientations = orientations[:100]
+
+# Plot the coordinates
+x_coords, y_coords, z_coords = zip(*coordinates)
+ax.scatter(x_coords, y_coords, z_coords, color='b', label='Coordinates')
+
+# Plot the rotation vectors
+for coord, quat in zip(coordinates, orientations):
+    rot_vec = R.Rotation.from_quat([quat[0], quat[1], quat[2], quat[3]])
+    ax.quiver(coord[0], coord[1], coord[2], rot_vec.as_rotvec()[0], rot_vec.as_rotvec()[1], rot_vec.as_rotvec()[2], color='r', length=1.0, normalize=True)
+
+ax.set_xlabel('X')
+ax.set_ylabel('Y')
+ax.set_zlabel('Z')
+ax.legend()
 plt.show()
