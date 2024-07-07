@@ -11,7 +11,7 @@ directions = []
 images = []  # List of images
 
 # Load the coordinates and orientations
-coordinates_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2_extracted/path_coordinates.txt'
+coordinates_path = '/home/sebastian/code/Trajectory_extraction/odom_data.txt'
 with open(coordinates_path, 'r') as file:
     for line in file:
         if line.startswith('#'):
@@ -31,8 +31,8 @@ ax.set_title('Path coordinates')
 ax.set_zlim(-5, 1)
 
 #limit the number of points to plot
-coordinates = coordinates[:100]
-orientations = orientations[:100]
+# coordinates = coordinates[:100]
+# orientations = orientations[:100]
 
 # Plot the coordinates
 x_coords, y_coords, z_coords = zip(*coordinates)

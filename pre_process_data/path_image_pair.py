@@ -1,3 +1,5 @@
+#This script is for creating synchornized image pairs from the camera and the odometry data
+
 import matplotlib.pyplot as plt
 import os
 import numpy as np
@@ -43,15 +45,20 @@ def extract_every_halfsecond(data):
     return result
 
 # Example usage
-coordinates_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2_extracted/odom_data.txt'
+coordinates_path = '/home/sebastian/code/Trajectory_extraction/odom_data.txt'
 rgb_timestamps_path = '/home/sebastian/Documents/ANYmal_data/anymal_real_message_grass02_extracted/rgb_timestamps.txt'
 odom_data = extract_data(coordinates_path)
 
-print(odom_data[0:5])
-print('\n')
+# print(odom_data[0:5])
+# print('\n')
 
 odom_data = extract_every_halfsecond(odom_data)
 # # timestamp_list = [(i, t) for i, t in timestamp_list]  # Normalize the timestamps
+
+#save the new odom_data to a new file
+with open('/home/sebastian/code/Trajectory_extraction/odom_data_halfsecond.txt', 'w') as file:
+    for line in odom_data:
+        file.write(' '.join([str(x) for x in line]) + '\n')
 
 print(odom_data[0:5])
 print(len(odom_data))
