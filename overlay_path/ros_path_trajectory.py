@@ -28,7 +28,7 @@ def quaternion_multiply(q1, q2):
     return r.as_quat()
 
 # Load the coordinates and orientations
-coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data.txt'
+coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data_halfsecond.txt'
 T_odom_list = []
 with open(coordinates_path, 'r') as file:
     for line in file:
@@ -36,9 +36,9 @@ with open(coordinates_path, 'r') as file:
             continue  # Skip comment lines
         parts = line.split()
         if parts:
-            coordinates.append(np.array([float(parts[1]), float(parts[2]), float(parts[3])]))
+            coordinates.append(np.array([float(parts[2]), float(parts[3]), float(parts[4])]))
             # print(coordinates[-1])
-            orientations.append(np.array([float(parts[4]), float(parts[5]), float(parts[6]), float(parts[7])])) #qx, qy, qz, qw
+            orientations.append(np.array([float(parts[5]), float(parts[6]), float(parts[7]), float(parts[8])])) #qx, qy, qz, qw
             # print(orientations[-1])
 
             T_odom = np.eye(4, 4)
@@ -62,21 +62,15 @@ if traslate_odom_to_camera:
 
         coordinates[i] = T_world_camera[:3, 3]
         orientations[i] = R.from_matrix(T_world_camera[:3, :3]).as_quat()
-        
-        # rotated_coord = R.from_quat(rotation).as_matrix()[:3, :3] @ coordinates[i] + translation
-        # coordinates[i] = rotated_coord
-
-        # #transform orientations
-        # orientations[i] = quaternion_multiply(rotation, orientations[i])
 
 # T1 = [R1 t1-> odometry from world to imu
-#  0   1]
+#       0   1]
 
 # T2 = [R2 t2 -> extrinsics from imu to camera
-#  0  1]
+#       0  1]
 
-# T1 * T2 = [R1*R2 R1*t2 + t1 -> odometry from world to camera
-#             0     1]
+# T1 * T2 = [R1*R2 R1*t2 + t1] -> odometry from world to camera
+#             0             1]
 
 # T = T1 @ T2
 
