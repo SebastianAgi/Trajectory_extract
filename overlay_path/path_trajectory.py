@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.spatial.transform as R
+from scipy.spatial.transform import Rotation as R
 
 # Initialize lists to store coordinates and orientations
 coordinates = []
@@ -10,16 +10,43 @@ orientations = []
 directions = []
 images = []  # List of images
 
+# Function to multiply two quaternions
+def quaternion_multiply(q1, q2):
+    q = R.from_quat(q1)
+    p = R.from_quat(q2)
+    
+    # Calculate the product
+    r = q * p
+
+    return r.as_quat()
+
 # Load the coordinates and orientations
-coordinates_path = '/home/sebastian/code/Trajectory_extraction/odom_data.txt'
+coordinates_path = '/home/sebastian/code/Trajectory_extraction/odom_data_halfsecond.txt'
 with open(coordinates_path, 'r') as file:
     for line in file:
         if line.startswith('#'):
             continue  # Skip comment lines
         parts = line.split()
         if parts:
-            coordinates.append((float(parts[1]), float(parts[2]), float(parts[3])))
-            orientations.append((float(parts[7]), float(parts[4]), float(parts[5]), float(parts[6])))
+            coordinates.append((float(parts[2]), -float(parts[3]), -float(parts[4])))
+            orientations.append((float(parts[5]), float(parts[6]), float(parts[7]), float(parts[8]))) #quaternion (w first?)
+
+#difference between odometry frame and camera frame
+translation = [-0.739, -0.056, -0.205] #x, y, z
+# rotation = [0.466, -0.469, -0.533, 0.528] #quaternion
+rotation = [-0.469, -0.533, 0.528, 0.466] #quaternion
+
+#transform coordinate-orientation pairs to camera frame
+for i in range(len(coordinates)):
+    #transform coordinates
+    coord = coordinates[i]
+    x = coord[0] + translation[0]
+    y = coord[1] + translation[1]
+    z = coord[2] + translation[2]
+    coordinates[i] = (x, y, z)
+
+    #transform orientations
+    orientations[i] = quaternion_multiply(rotation, orientations[i])
 
 # Plot coordinate data
 fig = plt.figure()
@@ -31,8 +58,8 @@ ax.set_title('Path coordinates')
 ax.set_zlim(-5, 1)
 
 #limit the number of points to plot
-# coordinates = coordinates[:100]
-# orientations = orientations[:100]
+coordinates = coordinates[:150]
+orientations = orientations[:150]
 
 # Plot the coordinates
 x_coords, y_coords, z_coords = zip(*coordinates)
@@ -40,8 +67,9 @@ ax.scatter(x_coords, y_coords, z_coords, color='b', label='Coordinates')
 
 # Plot the rotation vectors
 for coord, quat in zip(coordinates, orientations):
-    rot_vec = R.Rotation.from_quat([quat[0], quat[1], quat[2], quat[3]])
-    ax.quiver(coord[0], coord[1], coord[2], rot_vec.as_rotvec()[0], rot_vec.as_rotvec()[1], rot_vec.as_rotvec()[2], color='r', length=1.0, normalize=True)
+    rot_vec = R.from_quat([quat[0], quat[1], quat[2], quat[3]])
+    # quiver takes x, y, z, dx, dy, dz
+    ax.quiver(coord[0], coord[1], coord[2], rot_vec.as_rotvec()[0], rot_vec.as_rotvec()[1], rot_vec.as_rotvec()[2], color='r', length=0.5, normalize=True)
 
 ax.set_xlabel('X')
 ax.set_ylabel('Y')
