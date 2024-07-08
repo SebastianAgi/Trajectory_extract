@@ -7,7 +7,7 @@ import time
 from PIL import Image
 from torchvision import transforms as T
 
-image = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/hike_frame_by_frame/frame_0090.jpg')
+image = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/frame_0090.jpg')
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 from segment_anything import sam_model_registry, SamPredictor
 

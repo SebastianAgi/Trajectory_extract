@@ -69,5 +69,5 @@ def track_features_in_video_frames(folder_path):
     plt.show()
 
 # Path to your folder containing images
-folder_path = '/home/sebastian/Documents/code/Trajectory_extract/hike_frame_by_frame'
+folder_path = '/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame'
 track_features_in_video_frames(folder_path)

@@ -46,6 +46,6 @@ def process_video_with_optical_flow(frame1, frame2):
     plt.show()
 
 # Path to your video file
-frame1 = cv2.imread('/home/sebastian/Documents/code/Trajectory_extraction/hike_frame_by_frame/frame_0056.jpg')
-frame2 = cv2.imread('/home/sebastian/Documents/code/Trajectory_extraction/hike_frame_by_frame/frame_0057.jpg')
+frame1 = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/frame_0056.jpg')
+frame2 = cv2.imread('//home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/frame_0057.jpg')
 process_video_with_optical_flow(frame1, frame2)

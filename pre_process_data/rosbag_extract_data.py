@@ -68,6 +68,7 @@ class ExportData:
                 qz = odom.pose.pose.orientation.z
                 qw = odom.pose.pose.orientation.w
                 f.write(f"{timestamp} {x} {y} {z} {qx} {qy} {qz} {qw}\n")
+                # print(f"{timestamp} {x} {y} {z} {qx} {qy} {qz} {qw}\n")
 
     def extract_bag(self):
         # Initialize data arrays or variables to store data

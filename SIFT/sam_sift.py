@@ -14,7 +14,8 @@ from sklearn.metrics import davies_bouldin_score
 
 class SAM:
     def __init__(self) -> None:
-        self.sam_checkpoint = "/home/sebastian/code/segment_anything/sam_vit_h_4b8939.pth"
+        self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_h_4b8939.pth"
+        # self.sam_checkpoint = "/home/sebastian/Documents/code/SAM/sam_vit_b_01ec64.pth"
         self.model_type = "vit_h"
         self.device = "cuda"
 
@@ -184,7 +185,7 @@ if __name__ == "__main__":
     sift = SIFT()
 
     # Path to your folder containing images
-    folder_path = '/home/sebastian/code/Trajectory_extraction/hike_frame_by_frame'
+    folder_path = '/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame'
     init_points = np.array([[1920/2, 900],[1920/2, 920],[1920/2, 940],[1920/2, 960],[1920/2, 980]])
 
     sift.track_features_in_video_frames(folder_path, init_points)
@@ -193,7 +194,7 @@ if __name__ == "__main__":
 
     if test_sam == True:
         #test sam segmentation
-        test_image = cv2.imread('/home/sebastian/code/Trajectory_extraction/hike_frame_by_frame/frame_0000.jpg')
+        test_image = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/frame_0000.jpg')
         test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB)
 
         # track_features_in_video_frames(folder_path, init_points)
