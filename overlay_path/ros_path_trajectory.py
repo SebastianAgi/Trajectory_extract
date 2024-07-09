@@ -15,10 +15,14 @@ directions = []
 traslate_odom_to_camera = True
 ##########
 
+point = 100
+
+
 # Initialize the ROS node
 rospy.init_node('trajectory_publisher', anonymous=True)
 # Initialize the publisher
 pub = rospy.Publisher('/trajectory', odom, queue_size=10)
+pub2 = rospy.Publisher('/trajectory2', odom, queue_size=10)
 
 # Function to multiply two quaternions
 def quaternion_multiply(q1, q2):
@@ -28,7 +32,9 @@ def quaternion_multiply(q1, q2):
     return r.as_quat()
 
 # Load the coordinates and orientations
+# coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data.txt'
 coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data_halfsecond.txt'
+
 T_odom_list = []
 with open(coordinates_path, 'r') as file:
     for line in file:
@@ -59,10 +65,10 @@ if traslate_odom_to_camera:
     #transform coordinate-orientation pairs to camera frame
     for i in range(len(coordinates)):
         T_world_camera = np.linalg.inv(T_imu_camera) @ T_odom_list[i] @ T_imu_camera
-
+        
         coordinates[i] = T_world_camera[:3, 3]
         orientations[i] = R.from_matrix(T_world_camera[:3, :3]).as_quat()
-
+    print(T_world_camera)
 # T1 = [R1 t1-> odometry from world to imu
 #       0   1]
 
@@ -101,3 +107,32 @@ for i in range(len(coordinates)):
     # Sleep for 0.1 seconds
     rospy.sleep(0.01)
     print(f"Published message {i+1}/{len(coordinates)}", end='\r')
+
+    if i == point:
+        pub2.publish(directions[i])
+
+
+def trasnform_coord(quat, coord):
+    R1 = R.from_quat(quat).as_matrix()
+    #transpose R1 to get the inverse
+    return R1.T @ coord
+
+def plot_coordinates_in_chosen_frame(coords, point, quat):
+    print("rotation", quat)
+    print("point", point)
+    # for a given coordinate and orientation pair
+    New_frame_coord = []
+    for i in range(1, len(coords)):
+        c = trasnform_coord(quat, point - coords[i])
+        New_frame_coord.append(c)
+    
+    #set one axis to zero to plot in 2D
+    New_frame_coord = np.array(New_frame_coord)
+    plt.plot(New_frame_coord[:, 0], -New_frame_coord[:, 1])
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.xlim(-50,50)
+    plt.ylim(-50,50)
+    plt.show()
+
+plot_coordinates_in_chosen_frame(coordinates[point:], coordinates[point], orientations[point])
