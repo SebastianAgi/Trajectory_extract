@@ -90,8 +90,8 @@ class SIFT(SAM):
         - centroids: np.array, centroids of the clusters that best represent the points.
         """
         # Check if data has the right dimensions
-        if data.ndim != 2 or data.shape[1] != 2:
-            raise ValueError("Data should be a 2D numpy array with two columns for x and y coordinates.")
+        # if data.ndim != 2 or data.shape[1] != 2:
+        #     raise ValueError("Data should be a 2D numpy array with two columns for x and y coordinates.")
         
         # Dictionary to store the Davies-Bouldin scores for different numbers of clusters
         db_scores = {}
@@ -126,6 +126,9 @@ class SIFT(SAM):
         centroids = self.optimal_kmeans(keypoints2)
         print('centroids: ', centroids)
 
+        cv2.circle(trajectory_image, centroids, 5, (255, 0, 0), -1)  # Red centroid
+
+
         # Draw the movement of keypoints
         for match in good_matches:
             pt1 = tuple(np.round(keypoints1[match.queryIdx].pt).astype("int"))
@@ -133,7 +136,6 @@ class SIFT(SAM):
             pt2 = (pt2[0], pt2[1])
             # cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # Red starting point
             # cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # Blue ending point
-            cv2.circle(trajectory_image, centroids, 5, (255, 0, 0), -1)  # Red centroid
             cv2.line(trajectory_image, pt1, pt2, (0, 255, 0), 2)   # Green line for movement
             self.matches.append(pt2)
 

@@ -27,6 +27,7 @@ class SAM:
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         predictor = SamPredictor(sam)
+        print('SHAPE:',image.shape)
         predictor.set_image(image)
         # print('input_points: ', input_points)
         input_label = np.ones(input_points.shape[0])
@@ -106,7 +107,8 @@ class SIFT(SAM):
             print(f"Error: Cannot read image {image_path}.")
             return self.im,  # Return current image artist for FuncAnimation
 
-        temp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # temp = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        temp = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         seg, mask = self.sam_segmentation(temp, self.points_to_use)
         keypoints, descriptors = self.sift_features(seg)
 
@@ -140,6 +142,6 @@ class SIFT(SAM):
 
 if __name__ == "__main__":
     sift = SIFT()
-    folder_path = '/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame'
+    folder_path = '/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/'
     init_points = np.array([[1920/2, 900], [1920/2, 920], [1920/2, 940], [1920/2, 960], [1920/2, 980]])
     sift.track_features_in_video_frames(folder_path, init_points)

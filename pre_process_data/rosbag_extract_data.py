@@ -74,6 +74,7 @@ class ExportData:
         # Initialize data arrays or variables to store data
         # Initialize CvBridge for converting ROS Image messages to OpenCV images
         bridge = CvBridge()
+        get_rgb_info = False
         # Open the ROS bag for reading
         with rosbag.Bag(self.bag_path, 'r') as bag:
             # Get a list of all topics in the bag file
@@ -90,7 +91,10 @@ class ExportData:
                     # Save the rgb image as a PNG file
                     image_filename = f'{self.image_count:06d}.png'
                     image_filepath = os.path.join(self.extraction_folder, self.bag_name, 'images', image_filename)
-
+                    
+                    #if folder does not exist, create it
+                    os.makedirs(os.path.join(self.extraction_folder, self.bag_name, 'images'), exist_ok=True)
+                    
                     # Save the image to a specified folder
                     cv2.imwrite(image_filepath, rgb_image)
 
@@ -99,11 +103,11 @@ class ExportData:
                     # Increment the image count
                     self.image_count += 1
 
-                # if topic == '/path' and '/path' in available_topics:
-                #     # Get the path message
-                #     path = msg
-                #     # Append the timestamp and path to the path_data list
-                #     self._path_data.append((t.to_sec(), path))
+                if topic == '/path' and '/path' in available_topics:
+                    # Get the path message
+                    path = msg
+                    # Append the timestamp and path to the path_data list
+                    self._path_data.append((t.to_sec(), path))
 
                 if topic == '/Odometry' and '/Odometry' in available_topics:
                     # Get the Odometry message
@@ -111,10 +115,26 @@ class ExportData:
                     # Append the timestamp and Odometry to the odom_data list
                     self._odom_data.append((t.to_sec(), odom))
 
+                if get_rgb_info and topic == '/rgb/camera_info' and '/rgb/camera_info' in available_topics:
+                    # Get the camera info message
+                    camera_info = msg
+                    # Save the camera info message to a file
+                    camera_info_file_path = os.path.join(self.extraction_folder, self.bag_name, 'rgb_camera_info.txt')
+                    with open(camera_info_file_path, 'w') as f:
+                        f.write("# Camera info\n")
+                        f.write(f"# {camera_info.header.stamp}\n")
+                        f.write(f"# {camera_info.height} {camera_info.width}\n")
+                        f.write(f"# {camera_info.distortion_model}\n")
+                        f.write(f"# {camera_info.D}\n")
+                        f.write(f"# {camera_info.K}\n")
+                        f.write(f"# {camera_info.R}\n")
+                        f.write(f"# {camera_info.P}\n")
+                    get_rgb_info = False
+
     def save_data(self):
         self.extract_bag()
-        if self._rgb_data:
-            self.save_rgb_text_data('images', self._rgb_data)
+        # if self._rgb_data:
+        #     self.save_rgb_text_data('images', self._rgb_data)
         if self._path_data:
             self.save_coordinate_data(self._path_data)
         if self._odom_data:
@@ -124,8 +144,8 @@ class ExportData:
 
 if __name__ == "__main__":
     # Choose the output folder location
-    output_folder = '/home/sebastian/Documents/ANYmal_data/'
-    bag_path = '/home/sebastian/Documents/ANYmal_data/output_fastlio2.bag'
+    output_folder = '/home/sebastian/Documents/ANYmal_data/mine_hanheld_forest/'
+    bag_path = '/home/sebastian/Documents/ANYmal_data/mine_hanheld_forest/anymal_real_message_mine_handheld_forest.bag'
     export_data = ExportData(output_folder, bag_path)
     export_data.save_data()
     print('Data extraction complete.')

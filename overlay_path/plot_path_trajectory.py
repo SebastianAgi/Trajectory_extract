@@ -32,8 +32,8 @@ with open(coordinates_path, 'r') as file:
             continue  # Skip comment lines
         parts = line.split()
         if parts:
-            coordinates.append((float(parts[2]), -float(parts[3]), -float(parts[4])))
-            orientations.append((float(parts[5]), float(parts[6]), float(parts[7]), float(parts[8]))) #x, y, z, w
+            coordinates.append(np.array([float(parts[1]), float(parts[2]), float(parts[3])]))
+            orientations.append(np.array([float(parts[4]), float(parts[5]), float(parts[6]), float(parts[7])])) #qx, qy, qz, qw
 
 #difference between odometry frame and camera frame
 translation = [-0.739, -0.056, -0.205] #x, y, z

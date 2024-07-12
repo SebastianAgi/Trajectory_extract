@@ -15,7 +15,7 @@ directions = []
 traslate_odom_to_camera = True
 ##########
 
-point = 100
+point = 50
 
 
 # Initialize the ROS node
@@ -28,12 +28,12 @@ pub2 = rospy.Publisher('/trajectory2', odom, queue_size=10)
 def quaternion_multiply(q1, q2):
     # Calculate the product
     r = R.from_quat(q1) * R.from_quat(q2)
-    # from_quat([qx qy qz qu])
+    # from_quat([qx qy qz qu])  
     return r.as_quat()
 
 # Load the coordinates and orientations
 # coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data.txt'
-coordinates_path = '/home/sebastian/Documents/code/Trajectory_extract/odom_data_halfsecond.txt'
+coordinates_path = '/home/sebastian/Documents/ANYmal_data/mine_hanheld_forest/OrbSLAM_data/trajectory.txt'
 
 T_odom_list = []
 with open(coordinates_path, 'r') as file:
@@ -42,9 +42,9 @@ with open(coordinates_path, 'r') as file:
             continue  # Skip comment lines
         parts = line.split()
         if parts:
-            coordinates.append(np.array([float(parts[2]), float(parts[3]), float(parts[4])]))
+            coordinates.append(np.array([float(parts[1]), float(parts[2]), float(parts[3])]))
             # print(coordinates[-1])
-            orientations.append(np.array([float(parts[5]), float(parts[6]), float(parts[7]), float(parts[8])])) #qx, qy, qz, qw
+            orientations.append(np.array([float(parts[4]), float(parts[5]), float(parts[6]), float(parts[7])])) #qx, qy, qz, qw
             # print(orientations[-1])
 
             T_odom = np.eye(4, 4)

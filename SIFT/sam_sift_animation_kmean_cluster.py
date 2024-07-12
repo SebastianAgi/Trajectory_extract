@@ -30,6 +30,7 @@ class SAM:
         sam = sam_model_registry[self.model_type](checkpoint=self.sam_checkpoint)
         sam.to(device=self.device)
         predictor = SamPredictor(sam)
+        print('SHAPE:',image.shape)
         predictor.set_image(image)
         # print('input_points: ', input_points)
         input_label = np.ones(input_points.shape[0])

@@ -51,8 +51,9 @@ def track_features_in_video_frames(folder_path):
             for match in good_matches:
                 pt1 = tuple(np.round(previous_keypoints[match.queryIdx].pt).astype("int"))
                 pt2 = tuple(np.round(keypoints[match.trainIdx].pt).astype("int"))
+                print(pt1)
                 pt2 = (pt2[0], pt2[1])  # adjust y-coordinate
-                # cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # blue start
+                cv2.circle(trajectory_image, pt1, 5, (255, 0, 0), -1)  # blue start
                 # cv2.circle(trajectory_image, pt2, 5, (0, 0, 255), -1)  # red end
                 cv2.line(trajectory_image, pt1, pt2, (0, 255, 0), 2)    # green line
 
