@@ -101,15 +101,15 @@ for i in range(len(coordinates)):
     directions.append(odom_msg)
 
 # publish data to ros topic
-for i in range(len(coordinates)):
-    # Publish the message
-    pub.publish(directions[i])
-    # Sleep for 0.1 seconds
-    rospy.sleep(0.01)
-    print(f"Published message {i+1}/{len(coordinates)}", end='\r')
+# for i in range(len(coordinates)):
+#     # Publish the message
+#     pub.publish(directions[i])
+#     # Sleep for 0.1 seconds
+#     rospy.sleep(0.01)
+#     print(f"Published message {i+1}/{len(coordinates)}", end='\r')
 
-    if i == point:
-        pub2.publish(directions[i])
+#     if i == point:
+#         pub2.publish(directions[i])
 
 
 def trasnform_coord(quat, coord):

@@ -35,9 +35,7 @@ def main():
     orientations = []
     directions = []
 
-    print('jello')
-
-    folder_path = '/home/sebastian/Documents/ANYmal_data/odom_chosen_images_2/'
+    folder_path = '/home/sebastian/Documents/ANYmal_data/OPS_grass/odom_chosen_images_2/'
     images = sorted([os.path.join(folder_path, img) for img in os.listdir(folder_path) if img.endswith((".png", ".jpg", ".jpeg"))])
     img_file_names = [os.path.basename(img) for img in images]
 
@@ -104,7 +102,7 @@ def main():
         # Append the message to the list
         directions.append(odom_msg)
 
-    # # publish data to ros topic
+    # publish data to ros topic
     # for i in range(len(coordinates)):
     #     # Publish the message
     #     pub.publish(directions[i])
@@ -114,6 +112,12 @@ def main():
 
         # if i == point:
         #     pub2.publish(directions[i])
+
+    def unit_vector(vector):
+        magnitude = np.linalg.norm(vector)
+        if magnitude == 0:
+            return vector
+        return vector / magnitude
 
     def trasnform_coord(quat, coord):
         R1 = R.from_quat(quat).as_matrix()
@@ -129,9 +133,9 @@ def main():
         # print('\n c:',c)
         return np.array(New_frame_coord)  
     
-    #create cv2 window
-    cv2.namedWindow('image', cv2.WINDOW_NORMAL)
-    cv2.resizeWindow('image', 1280, 720)
+    # #create cv2 window
+    # cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+    # cv2.resizeWindow('image', 1280, 720)
 
     u_C2_past = np.zeros((2, 1))
     save_flag = True
@@ -139,6 +143,9 @@ def main():
 
     future_steps = 50
     all_points = []
+
+    # exit()
+    print('length of coordinates:', len(coordinates))
 
     for i in range(1, len(coordinates)- future_steps):
         point = i
@@ -179,13 +186,15 @@ def main():
         # Display the image with the points drawn on it in the cv2 window
         cv2.imshow('image', img)
         cv2.waitKey(0)
+
+        print(f"Point {point}/{len(coordinates)}", end='\r')
     
     #save all_points to a numpy file
-    print(all_points[-7:])
+    # print(all_points[-7:])
     print(len(all_points))
     
     #save all_pints as a json
-    with open('all_points.json', 'w') as f:
+    with open('OPS_grass_pixels.json', 'w') as f:
         json.dump(all_points, f)
 
 

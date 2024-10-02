@@ -82,14 +82,16 @@ class ExportData:
             print('available_topics:\n', available_topics)
             # Loop through the bag messages
             for topic, msg, t in bag.read_messages(topics=available_topics):
-                if topic == '/rgb/image_rect_color/compressed' and '/rgb/image_rect_color/compressed' in available_topics:
-                    # if isinstance(msg, CompressedImage):
+                if topic == '/zed2/zed_node/depth/depth_registered' and '/zed2/zed_node/depth/depth_registered' in available_topics:
+                    if isinstance(msg, CompressedImage):
                     # Convert the ROS CompressedImage message to an OpenCV image
-                    np_arr = np.frombuffer(msg.data, np.uint8)
-                    rgb_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # OpenCV >= 3.0
+                        np_arr = np.frombuffer(msg.data, np.uint8)
+                        rgb_image = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)  # OpenCV >= 3.0
+                    else:
+                        rgb_image = bridge.imgmsg_to_cv2(msg, desired_encoding='32FC1')
 
                     # Save the rgb image as a PNG file
-                    image_filename = f'{self.image_count:06d}.png'
+                    image_filename = f'{self.image_count:06d}.tiff'
                     image_filepath = os.path.join(self.extraction_folder, self.bag_name, 'images', image_filename)
                     
                     #if folder does not exist, create it
@@ -130,11 +132,15 @@ class ExportData:
                         f.write(f"# {camera_info.R}\n")
                         f.write(f"# {camera_info.P}\n")
                     get_rgb_info = False
+                if self.image_count % 100 == 0:
+                    print(f'Extracted {self.image_count} images.', end='\r')
+                if self.image_count > 100:
+                    break
 
     def save_data(self):
         self.extract_bag()
-        # if self._rgb_data:
-        #     self.save_rgb_text_data('images', self._rgb_data)
+        if self._rgb_data:
+            self.save_rgb_text_data('images', self._rgb_data)
         if self._path_data:
             self.save_coordinate_data(self._path_data)
         if self._odom_data:
@@ -144,8 +150,8 @@ class ExportData:
 
 if __name__ == "__main__":
     # Choose the output folder location
-    output_folder = '/home/sebastian/Documents/ANYmal_data/mine_hanheld_forest/'
-    bag_path = '/home/sebastian/Documents/ANYmal_data/mine_hanheld_forest/anymal_real_message_mine_handheld_forest.bag'
+    output_folder = '/home/sebastian/Documents/code/seb_trav/results/experiment_extracts/outdoor_ridge_depth'
+    bag_path = '/home/sebastian/Documents/anymal_experiment_rosbag/sebastian_experiments/anymal_real_message_20240829_122352.bag'
     export_data = ExportData(output_folder, bag_path)
     export_data.save_data()
     print('Data extraction complete.')

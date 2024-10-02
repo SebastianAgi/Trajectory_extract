@@ -89,9 +89,9 @@ class Traversability(Sam):
         images = sorted([os.path.join(folder_path, img) for img in os.listdir(folder_path) if img.endswith((".png", ".jpg", ".jpeg"))])
         point_count =-1
 
-        start = 700
+        start = 1100
         mask_count = 0
-        save_flag = True
+        save_flag = False
 
         #create cv2 window
         cv2.namedWindow('image', cv2.WINDOW_NORMAL)
@@ -112,14 +112,15 @@ class Traversability(Sam):
                 print('No points for this frame, skipping frame', end='\r')
                 point_count += 1
                 continue
-            
-            # print('\n')
 
             print('point_count:', point_count, '/', len(path_points), end='\r')
             # print('path_points:', path_points[point_count])
 
-            temp =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            seg, mask = self.sam_segmentation(frame, np.array(path_points[point_count]))
+            #make a variable temp_points to be the first middle anb last points in the path_points list
+            temp_points = [path_points[point_count][0], path_points[point_count][len(path_points[point_count])//2], path_points[point_count][-1]]
+
+            # temp =  cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            seg, mask = self.sam_segmentation(frame, np.array(temp_points))
 
             # Draw the movement of keypoints
             trajectory_image = self.draw_trajectory(frame, path_points[point_count], mask)
@@ -128,7 +129,7 @@ class Traversability(Sam):
             cv2.imshow('image', trajectory_image)
             # wait 0.01 seconds
             rospy.sleep(0.01)
-            # cv2.waitKey(0)
+            cv2.waitKey(0)
             point_count += 1
 
             if save_flag:
@@ -145,7 +146,7 @@ if __name__ == "__main__":
     trav = Traversability()
 
     # Path to your folder containing images
-    folder_path = '/home/sebastian/Documents/ANYmal_data/odom_chosen_images_2'
+    folder_path = '/home/sebastian/Documents/ANYmal_data/OPS_grass/odom_chosen_images_2'
 
     #load points from json file
     with open('all_points.json', 'r') as f:
@@ -157,7 +158,7 @@ if __name__ == "__main__":
 
     test_sam = False
 
-    if test_sam == True:
+    if test_sam == True: 
         #test sam segmentation
         test_image = cv2.imread('/home/sebastian/Documents/code/Trajectory_extract/data/hike_frame_by_frame/frame_0000.jpg')
         test_image = cv2.cvtColor(test_image, cv2.COLOR_BGR2RGB)
